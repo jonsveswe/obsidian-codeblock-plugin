@@ -32,8 +32,7 @@ export default class ExecutePython extends Plugin {
     }
 
     /**
-	 * Add a button to each code block that allows the user to run the code. The button is only added if the code block
-	 * utilizes a language that is supported by this plugin.
+	 * Add a button to each code block that allows the user to run the code. 
 	 *
 	 * @param element The parent element (i.e. the currently showed html page / note).
 	 * @param file An identifier for the currently showed note
@@ -45,29 +44,20 @@ export default class ExecutePython extends Plugin {
                 console.log("codeBlock: " + codeBlock);
                 console.log("codeBlock.textContent: " + codeBlock.textContent);
                 console.log("codeblock.className: " + codeBlock.className);
-				if (codeBlock.className.match(/^language-\w+/i)) {                    
-					codeBlock.className = codeBlock.className.replace(/^language-\{(\w+)/i, "language-$1 {");
-                    console.log("codeblock.className: " + codeBlock.className);
-					codeBlock.parentElement.className = codeBlock.className;
-                    console.log("codeblock.parentElement: " + codeBlock.parentElement);
-				}
 
 				const language = codeBlock.className.toLowerCase();
-
-				//if (!language || !language.contains("language-"))
-				//	return;
+                console.log("language: " + language);
+				if (!language || !language.contains("language-"))
+					return;
 
 				const pre = codeBlock.parentElement as HTMLPreElement;
 				const parent = pre.parentElement as HTMLDivElement;
 
-				const srcCode = codeBlock.getText();
+				const code = codeBlock.getText();
                 console.log("parent.classList: " + parent.classList);
-				//if (!parent.classList.contains(hasButtonClass)) { // & this block hasn't been buttonified already
-					//parent.classList.add(hasButtonClass);
-                    console.log("parent.classList: " + parent.classList);
-					const button = this.createRunButton();
-					pre.appendChild(button);
-				//}
+                const button = this.createRunButton();
+                pre.appendChild(button);
+                this.addListenerToButton(language, code, button);
 			});
 	}
     	/**
@@ -82,6 +72,25 @@ export default class ExecutePython extends Plugin {
 		button.setText("Run");
 		return button;
 	}
+
+    private addListenerToButton(language: string, code: string, button: HTMLButtonElement) {
+		if (language === "language-js") {
+			button.addEventListener("click", async () => {
+                await this.runJavascriptCode(code);
+            });
+        } else {
+
+        }
+    }
+    private async runJavascriptCode(code: string){
+        console.log("Inside runCode");
+        console.log("code: " + code);
+        try {
+            new Function(code)();
+          } catch (err) {
+            console.error(err);
+        }
+    }
 
     processPythonCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
         let noInput = source.includes("#noinput");
