@@ -1,6 +1,9 @@
 import { Plugin, MarkdownPostProcessorContext, MarkdownView, Notice, PluginSettingTab, App, Setting } from 'obsidian';
 import * as child_process from 'child_process';
 
+export const runButtonClass = "run-code-button";
+const hasButtonClass = "has-run-code-button";
+
 interface ExecutePythonSettings {
     pythonPath: string;
     showCodeInPreview: boolean;
@@ -21,13 +24,69 @@ export default class ExecutePython extends Plugin {
 
         this.addSettingTab(new MyPluginSettingTab(this.app, this));
 
-        this.registerMarkdownCodeBlockProcessor('python', this.processPythonCodeBlock.bind(this));
+        //this.registerMarkdownCodeBlockProcessor('python', this.processPythonCodeBlock.bind(this));
+
+        this.registerMarkdownPostProcessor((element, _context) => {
+			this.addRunButtons(element, _context.sourcePath);
+		});
     }
+
+    /**
+	 * Add a button to each code block that allows the user to run the code. The button is only added if the code block
+	 * utilizes a language that is supported by this plugin.
+	 *
+	 * @param element The parent element (i.e. the currently showed html page / note).
+	 * @param file An identifier for the currently showed note
+	 */
+	private addRunButtons(element: HTMLElement, file: string) {
+        console.log("Inside addRunButtons");
+		Array.from(element.getElementsByTagName("code"))
+			.forEach((codeBlock: HTMLElement) => {
+                console.log("codeBlock: " + codeBlock);
+                console.log("codeBlock.textContent: " + codeBlock.textContent);
+                console.log("codeblock.className: " + codeBlock.className);
+				if (codeBlock.className.match(/^language-\w+/i)) {                    
+					codeBlock.className = codeBlock.className.replace(/^language-\{(\w+)/i, "language-$1 {");
+                    console.log("codeblock.className: " + codeBlock.className);
+					codeBlock.parentElement.className = codeBlock.className;
+                    console.log("codeblock.parentElement: " + codeBlock.parentElement);
+				}
+
+				const language = codeBlock.className.toLowerCase();
+
+				//if (!language || !language.contains("language-"))
+				//	return;
+
+				const pre = codeBlock.parentElement as HTMLPreElement;
+				const parent = pre.parentElement as HTMLDivElement;
+
+				const srcCode = codeBlock.getText();
+                console.log("parent.classList: " + parent.classList);
+				//if (!parent.classList.contains(hasButtonClass)) { // & this block hasn't been buttonified already
+					//parent.classList.add(hasButtonClass);
+                    console.log("parent.classList: " + parent.classList);
+					const button = this.createRunButton();
+					pre.appendChild(button);
+				//}
+			});
+	}
+    	/**
+	 * Creates a new run button and returns it.
+	 *
+	 * @returns { HTMLButtonElement } The newly created run button.
+	 */
+	private createRunButton() {
+		console.log("Add run button");
+		const button = document.createElement("button");
+		button.classList.add(runButtonClass);
+		button.setText("Run");
+		return button;
+	}
 
     processPythonCodeBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
         let noInput = source.includes("#noinput");
-	source = source.replace("#noinput\n", "");
-	source = source.replace("#noinput", "");
+	    source = source.replace("#noinput\n", "");
+	    source = source.replace("#noinput", "");
 
         if (this.settings.showCodeInPreview) {
             let codeBlock = el.createEl('pre');
@@ -41,7 +100,7 @@ export default class ExecutePython extends Plugin {
         this.runPythonCode(source, outputArea, noInput);
     }
 
-    addRunButtons(mdView: MarkdownView, el: HTMLElement) {
+/*     addRunButtons(mdView: MarkdownView, el: HTMLElement) {
         el.querySelectorAll('pre.language-python').forEach((block: HTMLPreElement) => {
             let noInput = block.textContent.includes("#noinput");
             if (this.settings.showCodeInPreview) {
@@ -55,10 +114,12 @@ export default class ExecutePython extends Plugin {
             const outputArea = block.createEl('div', { cls: 'python-output', attr: {style: 'white-space: pre-wrap;'} });
 
             this.runPythonCode(source, outputArea, noInput);
+
         });
-    }
+    } */
 
     async runPythonCode(source: string, outputArea: HTMLElement, noInput: boolean = false) {
+        console.log("Inside runPythonCode");
         outputArea.textContent = '';  // Clear the output area before each run
 
         let inputField;

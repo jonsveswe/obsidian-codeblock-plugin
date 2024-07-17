@@ -6,3 +6,22 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+button.run-code-button {
+	display: inline-block;
+	color: var(--text-muted);
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	margin: 2px;
+	padding: 2px 10px 2px 10px;
+	z-index: 100;
+}
+
+.has-run-code-button {
+	position: relative;
+}
+
+.has-run-code-button pre {
+	z-index: 1;
+}
