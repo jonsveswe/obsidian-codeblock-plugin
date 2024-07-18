@@ -89,6 +89,10 @@ export default class ExecutePython extends Plugin {
             button.addEventListener("click", async () => {
                 await this.runCSharpCode(code);
             });
+        } else if(language === "language-ts") {
+            button.addEventListener("click", async () => {
+                await this.runTypeScriptCode(code);
+            });
         }
     }
     private async runJavascriptCode(code: string){
@@ -165,6 +169,46 @@ export default class ExecutePython extends Plugin {
             console.error(err);
         }
     }
+
+    private async runTypeScriptCode(code: string){
+        console.log("Inside runTypeScriptCode");
+        console.log("code: " + code);
+        let typeScriptProcess: child_process.ChildProcessWithoutNullStreams;
+        let handleOutput: Promise<void>;
+        let typeScriptPath = "ts-node"; // Requirements: Node.js installed then run in command line `npm install typescript -g` and `npm install ts-node -g`. (`-g` means global install)
+        //let cmd = `C:/Users/jonas.svensson/.dotnet/tools/dotnet-script.exe`;
+        const tempFileName = this.getTempFile("ts"); // C:\Users\JONAS~1.SVE\AppData\Local\Temp\temp_1721227658357.csx
+        //let tempFileName = "C:/tempfile.csx";
+        let args = [tempFileName];
+        fs.writeFileSync(tempFileName, code);
+        console.log("csharpPath: ", typeScriptPath);
+        console.log("args: ", args);
+        console.log("env: ", process.env);
+        console.log("tempFileName: ", tempFileName);
+        // Spawn a new process to run the C# code using the dotnet-script CLI tool.
+        // The `csharpPath` is the path to the dotnet-script CLI tool that should be used to run the code.
+        // args[0] have the file path to the C# code.
+        typeScriptProcess = child_process.spawn(typeScriptPath, args, { env: process.env, shell: true });
+        handleOutput = new Promise((resolve, reject) => {
+            typeScriptProcess.stdout.on('data', (data) => {
+                console.log(`stdout: ${data}`);
+            });
+            typeScriptProcess.stderr.on('data', (data) => {
+                console.error(`stderr: ${data}`);
+            });
+            typeScriptProcess.on('close', (code) => {
+                console.log(`child process exited with code ${code}`);
+                this.tempFileId = undefined; // Reset the file id to use a new file next time
+                resolve();
+            });
+        });
+        try {
+            await handleOutput;
+          } catch (err) {
+            console.error(err);
+        }
+    }
+
 	/**
 	 * Creates a new unique file name for the given file extension. The file path is set to the temp path of the os.
 	 * The file name is the current timestamp: '/{temp_dir}/temp_{timestamp}.{file_extension}'
