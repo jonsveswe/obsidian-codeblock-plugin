@@ -11,8 +11,8 @@ export default class RunCodeblockPlugin extends Plugin {
     tempFileId: string | undefined = undefined;
     async onload() {
 
-        this.registerMarkdownPostProcessor((element, _context) => {
-			this.addRunButtons(element, _context.sourcePath);
+        this.registerMarkdownPostProcessor((element, context) => {
+			this.addRunButtons(element, context);
 		}); 
     }
 
@@ -22,7 +22,7 @@ export default class RunCodeblockPlugin extends Plugin {
 	 * @param element The parent element (i.e. the currently showed html page / note).
 	 * @param file An identifier for the currently showed note
 	 */
-	private addRunButtons(element: HTMLElement, file: string) {
+	private addRunButtons(element: HTMLElement, context: MarkdownPostProcessorContext) {
         console.log("Inside addRunButtons");
 		Array.from(element.getElementsByTagName("code"))
 			.forEach((codeBlock: HTMLElement) => {
@@ -39,11 +39,24 @@ export default class RunCodeblockPlugin extends Plugin {
 				let code = codeBlock.getText();
                 console.log("code: " + code);
 
-                // Don't add run button if code contains #norun.
-                if (code.includes("#norun")) {
-                    code = code.replace("#norun\n", "");
-                    console.log("code: " + code);
-                    codeBlock.textContent = code;
+                /*
+                codeBlock.getText() returns only the code, so we can't access the first line in the codeblock. 
+                context.getSectionInfo(codeBlock) is an object that will have everyting in the "text" property, not just the code, 
+                from the whole note. Must use "lineEnd" and "lineStart" properties to get text only for current element.
+                Example of what context.getSectionInfo(codeBlock) returns:
+                {
+                    "text": "\n```python #norun\nprint(\"hgg, !\")\n```\n\n# Headline\n\n\n```python\nprint(\"Hello, Worldasdasd!\")\n```\n\n\t",
+                    "lineStart": 8,
+                    "lineEnd": 10
+                } 
+                */
+                console.log("context.getSectionInfo(codeBlock): ", context.getSectionInfo(codeBlock));
+                const sectionInfoLineStart = context.getSectionInfo(codeBlock)?.lineStart;
+                const sectionInfoText = context.getSectionInfo(codeBlock)?.text;
+                const firstLineOfCurrentCodeBlock = sectionInfoText?.split('\n')[sectionInfoLineStart ?? 0] ?? "";
+                console.log("firstLineOfCurrentCodeBlock: ", firstLineOfCurrentCodeBlock);
+                if (firstLineOfCurrentCodeBlock.includes("#norun")) {
+                    console.log("Codeblock contains #norun. Not adding run button.");
                     return;                    
                 }
 
