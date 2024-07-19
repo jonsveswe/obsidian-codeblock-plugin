@@ -26,20 +26,33 @@ export default class RunCodeblockPlugin extends Plugin {
         console.log("Inside addRunButtons");
 		Array.from(element.getElementsByTagName("code"))
 			.forEach((codeBlock: HTMLElement) => {
-                console.log("codeBlock: " + codeBlock);
-                console.log("codeBlock.textContent: " + codeBlock.textContent);
-                console.log("codeblock.className: " + codeBlock.className);
+                console.log("codeBlock: ", codeBlock);
+                console.log("codeBlock.textContent: ", codeBlock.textContent);
+                console.log("codeblock.className: ", codeBlock.className);
+                console.log("codeblock.classList: ", codeBlock.classList);
 
 				const language = codeBlock.className.toLowerCase();
                 console.log("language: " + language);
 				if (!language || !language.contains("language-"))
 					return;
 
-				const pre = codeBlock.parentElement as HTMLPreElement;
-				const parent = pre.parentElement as HTMLDivElement;
+				let code = codeBlock.getText();
+                console.log("code: " + code);
 
-				const code = codeBlock.getText();
-                console.log("parent.classList: " + parent.classList);
+                // Don't add run button if code contains #norun.
+                if (code.includes("#norun")) {
+                    code = code.replace("#norun\n", "");
+                    console.log("code: " + code);
+                    codeBlock.textContent = code;
+                    return;                    
+                }
+
+				const pre = codeBlock.parentElement as HTMLPreElement;
+				//const parent = pre.parentElement as HTMLDivElement;
+                console.log(pre);
+                //console.log(parent);
+
+                //console.log("parent.classList: " + parent.classList);
                 const button = this.createRunButton();
                 pre.appendChild(button);
                 this.addListenerToButton(language, code, button);
