@@ -55,8 +55,8 @@ export default class RunCodeblockPlugin extends Plugin {
                 const sectionInfoText = context.getSectionInfo(codeBlock)?.text;
                 const firstLineOfCurrentCodeBlock = sectionInfoText?.split('\n')[sectionInfoLineStart ?? 0] ?? "";
                 console.log("firstLineOfCurrentCodeBlock: ", firstLineOfCurrentCodeBlock);
-                if (firstLineOfCurrentCodeBlock.includes("#norun")) {
-                    console.log("Codeblock contains #norun. Not adding run button.");
+                if (!firstLineOfCurrentCodeBlock.includes("#run")) {
+                    console.log("Codeblock doens't contain #run. Not adding run button.");
                     return;                    
                 }
 
