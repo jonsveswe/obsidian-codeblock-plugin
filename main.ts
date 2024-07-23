@@ -9,21 +9,23 @@ const RUN_BUTTON_CLASS = "run-code-button";
 export default class RunCodeblockPlugin extends Plugin {
     tempFileId: string | undefined = undefined;
     async onload() {
-
+        console.log('loading plugin');
         this.registerMarkdownPostProcessor((element, context) => {
 			this.addRunButtons(element, context);
 		}); 
     }
 
-    /**
-	 * Add a button to each code block that allows the user to run the code. 
+
+	/**
+	 * Add a button to each code block that allows the user to run the code.
 	 *
-	 * @param element The parent element (i.e. the currently showed html page / note).
-	 * @param file An identifier for the currently showed note
+	 * @param {HTMLElement} element - The individual div element on the page. The div can have a heading <h1>, a <p>, a <pre>, etc. So addRunButtons will be called for each <div> on page.
+	 * @param {MarkdownPostProcessorContext} context - The context of the markdown post-processor.
 	 */
 	private addRunButtons(element: HTMLElement, context: MarkdownPostProcessorContext) {
         console.log("Inside addRunButtons");
-		Array.from(element.getElementsByTagName("code"))
+        console.log("element: ", element);
+		element.querySelectorAll("pre > code") // Triple ticks ``` ``` (fenced code) create <pre><code> tags. Inline single ticks ` ` only create <code> tag. 
 			.forEach((codeBlock: HTMLElement) => {
                 console.log("codeBlock: ", codeBlock);
                 console.log("codeBlock.textContent: ", codeBlock.textContent);
