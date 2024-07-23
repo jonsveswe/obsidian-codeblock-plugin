@@ -4,8 +4,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-export const runButtonClass = "run-code-button";
-const hasButtonClass = "has-run-code-button";
+const RUN_BUTTON_CLASS = "run-code-button";
 
 export default class RunCodeblockPlugin extends Plugin {
     tempFileId: string | undefined = undefined;
@@ -56,7 +55,7 @@ export default class RunCodeblockPlugin extends Plugin {
                 const firstLineOfCurrentCodeBlock = sectionInfoText?.split('\n')[sectionInfoLineStart ?? 0] ?? "";
                 console.log("firstLineOfCurrentCodeBlock: ", firstLineOfCurrentCodeBlock);
                 if (!firstLineOfCurrentCodeBlock.includes("#run")) {
-                    console.log("Codeblock doens't contain #run. Not adding run button.");
+                    console.log("Codeblock doesn't contain #run. Not adding run button.");
                     return;                    
                 }
 
@@ -79,7 +78,7 @@ export default class RunCodeblockPlugin extends Plugin {
 	private createRunButton() {
 		console.log("Add run button");
 		const button = document.createElement("button");
-		button.classList.add(runButtonClass);
+		button.classList.add(RUN_BUTTON_CLASS);
 		button.setText("Run");
 		return button;
 	}
@@ -231,5 +230,14 @@ export default class RunCodeblockPlugin extends Plugin {
 			this.tempFileId = Date.now().toString();
 		console.log("temp file: ", path.join(os.tmpdir(), `temp_${this.tempFileId}.${ext}`));
 		return path.join(os.tmpdir(), `temp_${this.tempFileId}.${ext}`);
+	}
+
+    onunload() {
+
+		document
+			.querySelectorAll("." + RUN_BUTTON_CLASS)
+			.forEach((button: HTMLButtonElement) => button.remove());
+
+		console.log("Unloaded plugin. Removed all run buttons.");
 	}
 }
